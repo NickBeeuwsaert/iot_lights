@@ -51,6 +51,13 @@ class App extends Component {
 
     receiveAddLight(newLight) {
         const {lights} = this.state;
+        
+        // Don't add duplicate lights
+        if(lights.some(
+            ({id}) => id == newLight.id
+        )) {
+            return
+        }
 
         this.setState({
             lights: [...lights, newLight]
