@@ -19,7 +19,6 @@ class App extends Component {
 
     componentDidMount() {
         this.websocket = Sockette(
-            // 'wss://serene-springs-30122.herokuapp.com/websocket',
             'ws://127.0.0.1:8080/websocket',
             {
                 onmessage: this.receiveMessage
@@ -52,7 +51,6 @@ class App extends Component {
 
     receiveAddLight(newLight) {
         const {lights} = this.state;
-        console.log(newLight);
 
         this.setState({
             lights: [...lights, newLight]
