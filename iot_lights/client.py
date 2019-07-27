@@ -5,6 +5,7 @@ import json
 import aiohttp
 import requests
 from aiohttp import WSMsgType
+from .schema import EventSchema
 
 SERVER_URL = 'ws://127.0.0.1:8080/websocket'
 API_ENDPOINT = 'http://hassio.local:8123/api'
@@ -16,6 +17,7 @@ class IoTLightCient:
         self.websocket = websocket
         self.token = token
         self.secret = secret
+        self.schema = EventSchema().bind(secret_key=self.secret)
     
     @property
     def headers(self):
@@ -27,16 +29,20 @@ class IoTLightCient:
         }
 
     def handle_message(self, message):
-        data = json.loads(message.data)
+        data = self.schema.deserialize(json.loads(message.data))
+        if data['type'] != 'changeLight':
+            return
 
-        if data['state']:
+        light = data['light']
+
+        if light['state']:
             requests.post(
                 f"{self.endpoint}/services/light/turn_on",
                 headers=self.headers,
                 json={
-                    'entity_id': data['id'],
-                    'brightness_pct': data['brightness'],
-                    'hs_color': (data['hue'], 100)
+                    'entity_id': light['id'],
+                    'brightness_pct': light['brightness'],
+                    'hs_color': (light['hue'], 100)
                 }
             )
         else:
@@ -44,7 +50,7 @@ class IoTLightCient:
                 f"{self.endpoint}/services/light/turn_off",
                 headers=self.headers,
                 json={
-                    'entity_id': data['id']
+                    'entity_id': light['id']
                 }
             )
 
@@ -76,7 +82,11 @@ class IoTLightCient:
                 async with session.ws_connect(self.websocket) as websocket:
                     for color_light in color_lights:
                         await websocket.send_json(
-                            {**color_light, "key": self.secret}
+                            {
+                                'type': 'addLight',
+                                'light': color_light,
+                                "key": self.secret
+                            }
                         )
 
                     async for message in websocket:

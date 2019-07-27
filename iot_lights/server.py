@@ -6,29 +6,45 @@ from weakref import WeakSet
 
 from aiohttp import WSMsgType, web
 
+from .schema import EventSchema
+
 logger = logging.getLogger(__name__)
 
-async def update_lightbulb(app, data, key):
-    for light in app.lights:
-        if light['id'] == data['id']:
-            light.update(data)
-            await app.broadcast(light)
-            return
 
-    if key == os.environ.get('SECRET_KEY'):
-        print(f"Adding light {data['id']}")
-        app.lights.append(data)
-        await app.broadcast(data)
+async def add_light(app, data):
+    if app.secret_key != data.get('key'):
+        logger.error("Key Mismatch")
+        return
 
-def is_valid(data):
-    return 'id' in data        
+    logger.info("adding light")
+
+    app.lights[data['light']['id']] = data['light']
+    await app.broadcast({
+        "type": "addLight",
+        "light": data['light']
+    })
+
+
+async def update_light(app, data):
+    light = data['light']
+    app.lights[light['id']] = light
+
+    await app.broadcast({
+        'type': 'changeLight',
+        'light': light
+    })
 
 async def handle_message(app, message):
-    data = json.loads(message.data)
-    if not is_valid(data):
-        return
-    key = data.pop('key', None)
-    await update_lightbulb(app, data, key)
+    schema = EventSchema().bind(secret_key=app.secret_key)
+
+    data = schema.deserialize(
+        json.loads(message.data)
+    )
+
+    if data['type'] == 'addLight':
+        await add_light(app, data)
+    elif data['type'] == 'changeLight':
+        await update_light(app, data)
 
 async def get_websocket(request: web.Request) -> web.WebSocketResponse:
     websocket = web.WebSocketResponse()
@@ -36,8 +52,11 @@ async def get_websocket(request: web.Request) -> web.WebSocketResponse:
 
     request.app.websockets.add(websocket)
 
-    for light in request.app.lights:
-        await websocket.send_json(light)
+    for light in request.app.lights.values():
+        await websocket.send_json({
+            'type': 'addLight',
+            'light': light
+        })
 
     async for message in websocket:
         if message.type == WSMsgType.TEXT:
@@ -61,8 +80,10 @@ def main():
 
     application = web.Application()
     application.websockets = WeakSet()
-    application.lights = []
+    application.lights = {}
     application.broadcast = lambda message: broadcast(application, message)
+    # if no secret key is provided, make sure no secret key will ever match
+    application.secret_key = os.environ.get('SECRET_KEY', object())
     application.add_routes([
         web.get('/websocket', get_websocket)
     ])

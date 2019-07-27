@@ -12,7 +12,9 @@ class App extends Component {
         };
 
         this.onChange = this.onChange.bind(this);
-        this.receiveChange = this.receiveChange.bind(this);
+        this.receiveChangeLight = this.receiveChangeLight.bind(this);
+        this.receiveAddLight = this.receiveAddLight.bind(this);
+        this.receiveMessage = this.receiveMessage.bind(this);
     }
 
     componentDidMount() {
@@ -20,7 +22,7 @@ class App extends Component {
             // 'wss://serene-springs-30122.herokuapp.com/websocket',
             'ws://127.0.0.1:8080/websocket',
             {
-                onmessage: this.receiveChange
+                onmessage: this.receiveMessage
             }
         );
     }
@@ -28,23 +30,32 @@ class App extends Component {
         this.websocket.close();
     }
 
-    receiveChange({data}) {
-        const newLight = JSON.parse(data);
-        const {lights} = this.state;
-        const isUpdate = lights.some(light => light.id === newLight.id);
+    receiveMessage({data}) {
+        data = JSON.parse(data);
 
-        const newLights = isUpdate ? (
-            lights.map(
-                light => light.id === newLight.id ? (
-                    {...light, ...newLight}
-                ) : light
-            )
-        ) : [
-            ...lights, newLight
-        ];
+        if (data['type'] === 'changeLight') {
+            this.receiveChangeLight(data['light']);
+        } else if(data['type'] === 'addLight') {
+            this.receiveAddLight(data['light']);
+        }
+    }
+
+    receiveChangeLight(newLight) {
+        const {lights} = this.state;
 
         this.setState({
-            lights: newLights
+            lights: lights.map(
+                light => light.id === newLight.id ? newLight : light
+            )
+        });
+    }
+
+    receiveAddLight(newLight) {
+        const {lights} = this.state;
+        console.log(newLight);
+
+        this.setState({
+            lights: [...lights, newLight]
         });
     }
 
@@ -56,7 +67,10 @@ class App extends Component {
             )
         });
 
-        this.websocket.send(JSON.stringify(newLight));
+        this.websocket.send(JSON.stringify({
+            type: 'changeLight',
+            light: newLight
+        }));
     }
 
     render({}, {lights}) {
