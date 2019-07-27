@@ -1,0 +1,57 @@
+html, body {
+    font-family: sans-serif;
+}
+label {
+    display: block;
+}
+
+.light__brightness, .light__state, .light__hue {
+    margin: 1em 0 1em 0;
+}
+
+.light {
+    width: 50%;
+    margin: 2em auto 2em auto;
+    padding: 2em;
+    border: 1px solid #777;
+    border-radius: 3px;
+    background: #eee;
+    text-align: center;
+}
+
+.light__brightness__inner {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.light__brightness input {
+    flex: 1;
+}
+.light__hue input {
+    width: 100%;
+}
+
+.light__state input {
+    display: none;
+}
+.light__state input:checked + label {
+    color: hsl(209, 98%, 55%);
+}
+
+.hue-slider {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: linear-gradient(
+        90deg,
+        hsl(0, 100%, 50%),
+        hsl(45, 100%, 50%),
+        hsl(90, 100%, 50%),
+        hsl(135, 100%, 50%),
+        hsl(180, 100%, 50%),
+        hsl(225, 100%, 50%),
+        hsl(270, 100%, 50%),
+        hsl(315, 100%, 50%),
+        hsl(360, 100%, 50%)
+    );
+}

@@ -8,22 +8,7 @@ class App extends Component {
         super(props);
 
         this.state = {
-            lights: [
-                {
-                    id: 'light.alpha',
-                    name: 'Alpha Bulb',
-                    state: true,
-                    brightness: 75,
-                    color: 'red'
-                },
-                {
-                    id: 'light.beta',
-                    name: 'Beta Bulb',
-                    state: false,
-                    brightness: 50,
-                    color: 'red'
-                }
-            ]
+            lights: []
         };
 
         this.onChange = this.onChange.bind(this);
@@ -32,7 +17,8 @@ class App extends Component {
 
     componentDidMount() {
         this.websocket = Sockette(
-            'ws://127.0.0.1:5000/websocket',
+            // 'wss://serene-springs-30122.herokuapp.com/websocket',
+            'ws://127.0.0.1:8080/websocket',
             {
                 onmessage: this.receiveChange
             }
@@ -45,13 +31,20 @@ class App extends Component {
     receiveChange({data}) {
         const newLight = JSON.parse(data);
         const {lights} = this.state;
-        console.log(newLight);
-        this.setState({
-            lights: lights.map(
+        const isUpdate = lights.some(light => light.id === newLight.id);
+
+        const newLights = isUpdate ? (
+            lights.map(
                 light => light.id === newLight.id ? (
                     {...light, ...newLight}
                 ) : light
             )
+        ) : [
+            ...lights, newLight
+        ];
+
+        this.setState({
+            lights: newLights
         });
     }
 
@@ -74,9 +67,10 @@ class App extends Component {
                         light => html`
                             <${Light}
                                 id=${light.id}
+                                name=${light.name}
                                 state=${light.state}
                                 brightness=${light.brightness}
-                                color=${light.color}
+                                hue=${light.hue}
                                 onChange=${this.onChange}
                             />
                         `
