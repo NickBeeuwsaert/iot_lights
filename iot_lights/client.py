@@ -28,7 +28,7 @@ class IoTLightCient:
             'Authorization': f'Bearer {self.token}'
         }
 
-    def handle_message(self, message):
+    async def handle_message(self, session, message):
         data = self.schema.deserialize(json.loads(message.data))
         if data['type'] != 'changeLight':
             return
@@ -36,7 +36,7 @@ class IoTLightCient:
         light = data['light']
 
         if light['state']:
-            requests.post(
+            await session.post(
                 f"{self.endpoint}/services/light/turn_on",
                 headers=self.headers,
                 json={
@@ -46,7 +46,7 @@ class IoTLightCient:
                 }
             )
         else:
-            requests.post(
+            await session.post(
                 f"{self.endpoint}/services/light/turn_off",
                 headers=self.headers,
                 json={
@@ -91,7 +91,7 @@ class IoTLightCient:
 
                     async for message in websocket:
                         if message.type == WSMsgType.TEXT:
-                            self.handle_message(message)
+                            await self.handle_message(session, message)
 
 
 def main():
