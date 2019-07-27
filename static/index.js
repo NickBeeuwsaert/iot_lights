@@ -1,7 +1,7 @@
 import {html, render, Component} from 'https://unpkg.com/htm/preact/standalone.mjs';
 import Sockette from 'https://unpkg.com/sockette?module';
-import Light from './Light';
-import {API_ENDPOINT} from './config';
+import Light from './Light.js';
+import {API_ENDPOINT} from './config.js';
 
 
 class App extends Component {
