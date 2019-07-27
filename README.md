@@ -37,3 +37,9 @@ Let strangers on the internet control my smart lights
         --secret="$SECRET_KEY" \
         --token="$ACCESS_TOKEN"
     ```
+
+## Note
+While this is meant to be a fun little project, it is also a very bad idea,
+so I wouldn't recommend deploying this to the internet unless you know what you are doing.
+
+It is also extremely easy to flood the websocket connection with data and lock up your lights, so be careful with that.
