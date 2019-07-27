@@ -1,6 +1,7 @@
 import {html, render, Component} from 'https://unpkg.com/htm/preact/standalone.mjs';
 import Sockette from 'https://unpkg.com/sockette?module';
-import Light from './Light.js';
+import Light from './Light';
+import {API_ENDPOINT} from './config';
 
 
 class App extends Component {
@@ -19,7 +20,7 @@ class App extends Component {
 
     componentDidMount() {
         this.websocket = Sockette(
-            'ws://127.0.0.1:8080/websocket',
+            API_ENDPOINT,
             {
                 onmessage: this.receiveMessage
             }
